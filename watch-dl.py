@@ -16,7 +16,7 @@ def info_extractor(url):
     params = urllib.urlencode({'fuck_you':'','confirm':'Click Here to Watch Free!!'})
     request = urllib2.Request(video_url,params)
     video_webpage = urllib2.urlopen(request).read()
-    final_url =  re.findall(r'file=(.+?)&',
+    final_url =  re.findall(r'file: "(.+?)",',
                             video_webpage)
     return urllib.unquote(final_url[-1]).replace(' ','%20')
 
@@ -28,13 +28,13 @@ def downloader(fileurl,file_name):
     print "[watchcartoononline-dl]  Downloading %s (%s bytes)" %(file_name, file_size)
     file_size_dl = 0
     block_size = 8192
-     
+
     #Download loop
     while True:
         buffer = u.read(block_size)
         if not buffer:
             break
-     
+
         file_size_dl += len(buffer)
         f.write(buffer)
         status = r"%s [%3.2f%%]" % (convertSize(file_size_dl), file_size_dl * 100. / file_size)
@@ -42,7 +42,7 @@ def downloader(fileurl,file_name):
         #print status
         sys.stdout.write("\r        %s" % status)
         sys.stdout.flush()
-     
+
     #Download done. Close file stream
     f.close()
 
