@@ -74,7 +74,10 @@ def convertSize(n, format='%(value).1f %(symbol)s', symbols='customary'):
     return format % dict(symbol=symbols[0], value=n)
 
 if __name__ == '__main__':
-    url = raw_input("url ?  ")
+    if len(sys.argv[1:]) > 0:
+        url = sys.argv[1]
+    else:
+        url = raw_input("url ?  ")
     final_url = info_extractor(url)
     name = final_url.split('/')[-1]
     downloader(final_url,name)
