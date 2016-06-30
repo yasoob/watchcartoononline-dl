@@ -8,13 +8,16 @@ def info_extractor(url):
     _VALID_URL = r'(?:http://)?(?:www\.)?watchcartoononline\.com/([^/]+)'
     mobj = re.match(_VALID_URL, url)
     video_id = mobj.group(1)
-    webpage = urllib2.urlopen(url).read()
+    user_agent = 'Mozilla/5.0 (Windows NT 5.1; rv:10.0.1) Gecko/20100101 Firefox/10.0.1'
+    headers = { 'User-Agent' : user_agent }
+    request = urllib2.Request(url,headers=headers)
+    webpage = urllib2.urlopen(request).read()
     video_url = re.search(r'<iframe id="(.+?)0" (.+?)>',
                             webpage).group()
     video_url = re.search('src="(.+?)"',
                             video_url).group(1).replace(' ','%20')
     params = urllib.urlencode({'fuck_you':'','confirm':'Click Here to Watch Free!!'})
-    request = urllib2.Request(video_url,params)
+    request = urllib2.Request(video_url,params,headers=headers)
     video_webpage = urllib2.urlopen(request).read()
     final_url =  re.findall(r'file: "(.+?)",',
                             video_webpage)
