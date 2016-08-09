@@ -28,7 +28,7 @@ def downloader(fileurl,file_name):
     f = open(file_name, 'wb')
     meta = u.info()
     file_size = int(meta.getheaders("Content-Length")[0])
-    print "[watchcartoononline-dl]  Downloading %s (%s bytes)" %(file_name, file_size)
+    print "[watchcartoononline-dl]  Downloading %s (%s)" %(file_name, convertSize(file_size))
     file_size_dl = 0
     block_size = 8192
 
@@ -79,8 +79,8 @@ def convertSize(n, format='%(value).1f %(symbol)s', symbols='customary'):
 if __name__ == '__main__':
     if len(sys.argv[1:]) > 0:
         url = sys.argv[1]
+        final_url = info_extractor(url)
+        name = final_url.split('/')[-1]
+        downloader(final_url,name)
     else:
-        url = raw_input("url ?  ")
-    final_url = info_extractor(url)
-    name = final_url.split('/')[-1]
-    downloader(final_url,name)
+        print "Usage: python watch-dl.py [URL...] \n\nwatch-dl: error: You must provide a URL."
