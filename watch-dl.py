@@ -104,7 +104,7 @@ if __name__ == '__main__':
             if final_url is None:
                 print "ERROR: Try again"
             else:
-                name = final_url.split('/')[-1]
+                name = final_url.replace('%20',' ').split('/')[-1]
                 downloader(final_url,name)
         #throws error message when keyboard inturupted eg: ctrl+c
         except KeyboardInterrupt:
