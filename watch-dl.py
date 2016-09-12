@@ -1,3 +1,5 @@
+#! /usr/bin/python
+
 # -*- coding: utf-8 -*-
 import urllib
 import re
@@ -18,7 +20,7 @@ def info_extractor(url):
         webpage = urllib2.urlopen(request).read()
     
         print "[watchcartoononline-dl]  Finding video"
-        video_url = re.search(r'<iframe id="(.+?)0" (.+?)>', webpage).group()
+        video_url = re.search(r'<iframe src="http://www.watchcartoononline.com/inc/(.+?)>', webpage).group()
         video_url = re.search('src="(.+?)"', video_url).group(1).replace(' ','%20')
         
         # "clicks" the "Click Here to Watch Free" button to so it can access the actual video file url
