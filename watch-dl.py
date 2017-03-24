@@ -8,7 +8,7 @@ import sys
 import os
 
 def info_extractor(url):
-    _VALID_URL = r'(?:http://)?(?:www\.)?watchcartoononline\.com/([^/]+)'
+    _VALID_URL = r'(?:https://)?(?:www\.)?watchcartoononline\.io/([^/]+)'
     #checks if url is valid
     if re.match(_VALID_URL, url) is not None:
         #sets user_agent so watchcartoononline doesn't cause issues
@@ -20,7 +20,7 @@ def info_extractor(url):
         webpage = urllib2.urlopen(request).read()
     
         print "[watchcartoononline-dl]  Finding video"
-        video_url = re.search(r'<iframe src="http://www.watchcartoononline.com/inc/(.+?)>', webpage).group()
+        video_url = re.search(r'<iframe [^>]*src="https://www.watchcartoononline.io/inc/(.+?)>', webpage).group()
         video_url = re.search('src="(.+?)"', video_url).group(1).replace(' ','%20')
         
         # "clicks" the "Click Here to Watch Free" button to so it can access the actual video file url
