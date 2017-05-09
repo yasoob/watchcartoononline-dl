@@ -15,7 +15,7 @@ def info_extractor(url):
         user_agent = 'Mozilla/5.0 (Windows NT 5.1; rv:10.0.1) Gecko/20100101 Firefox/10.0.1'
         headers = { 'User-Agent' : user_agent }
         
-        print "[watchcartoononline-dl]  Opening webpage"
+        print "[watchcartoononline-dl]  Downloading webpage"
         request = urllib2.Request(url,headers=headers)
         webpage = urllib2.urlopen(request).read()
     
@@ -37,6 +37,39 @@ def info_extractor(url):
             print "ERROR: Video not found"
         else:
             return urllib.unquote(final_url[-1]).replace(' ','%20')
+    else:
+        print "ERROR: URL was invalid, please use a valid URL from www.watchcartoononline.com"
+
+def episodes_extractor(episode_list):
+    _VALID_URL = r'(?:https://)?(?:www\.)?watchcartoononline\.io/anime/([^/]+)'
+    #check if url is valid
+    if re.match(_VALID_URL, episode_list) is not None:
+    
+        #sets user_agent so watchcartoononline doesn't cause issues
+        user_agent = 'Mozilla/5.0 (Windows NT 5.1; rv:10.0.1) Gecko/20100101 Firefox/10.0.1'
+        headers = { 'User-Agent' : user_agent }
+        
+        print "[watchcartoononline-dl]  Downloading webpage"
+        request = urllib2.Request(episode_list, headers=headers)
+        webpage = urllib2.urlopen(request).read()
+
+        print "[watchcartoononline-dl]  Finding episode(s)"
+        #snip the html, to avoid matching episodes in the 'recenly added' bar
+        indexOfRecenly = webpage.find("Recenly")
+        truncated = ""
+        if indexOfRecenly != -1:
+            truncated = webpage[:indexOfRecenly]
+        else:
+            print "WARNING: couldn't find 'Recenly Added' section in page, maybe the site layout has changed?"
+        
+        page_urls = re.findall(r'https://www.watchcartoononline.io/[a-zA-Z0-9-]+episode-[0-9]{1,4}[a-zA-Z0-9-]+', truncated)
+        print "URLs found:"
+        for url in page_urls:
+            print url
+        
+        for url in page_urls:
+            print "[watchcartoononline-dl] downloading "+url+"..."
+            doAnEpisode(url)
     else:
         print "ERROR: URL was invalid, please use a valid URL from www.watchcartoononline.com"
 
@@ -98,17 +131,26 @@ def convertSize(n, format='%(value).1f %(symbol)s', symbols='customary'):
             return format % locals()
     return format % dict(symbol=symbols[0], value=n)
 
+
+def doAnEpisode(url):
+    #url = sys.argv[1]
+    final_url = info_extractor(url)
+    if final_url is None:
+        print "ERROR: unable to extract video url from "+url
+    else:
+        name = final_url.replace('%20',' ').split('/')[-1]
+        downloader(final_url,name)
+
 if __name__ == '__main__':
     if len(sys.argv[1:]) > 0:
         try:
             url = sys.argv[1]
-            final_url = info_extractor(url)
-            if final_url is None:
-                print "ERROR: Try again"
-            else:
-                name = final_url.replace('%20',' ').split('/')[-1]
-                downloader(final_url,name)
-        #throws error message when keyboard inturupted eg: ctrl+c
+            if "/anime/" in url: #argument looks like an episode-list page
+                print "[watchcartoononline-dl] looks like a list of episodes (season?), extracting episode page URLs..."
+                episodes_extractor(sys.argv[1])
+            else: #episode should be a video page
+                doAnEpisode(url)
+        #throws error message for keyboard interrupt eg: ctrl+c
         except KeyboardInterrupt:
             print "\nERROR: Interrupted by user"
             try:
@@ -119,3 +161,5 @@ if __name__ == '__main__':
         #Prints some info if there was no argument
         print "Usage: python watch-dl.py [URL...]" 
         print "ERROR: You must provide a valid URL from www.watchcartoononline.com"
+
+
