@@ -6,6 +6,7 @@ import re
 import urllib2
 import sys
 import os
+import os.path
 
 def info_extractor(url):
     _VALID_URL = r'(?:https://)?(?:www\.)?watchcartoononline\.io/([^/]+)'
@@ -72,20 +73,27 @@ def episodes_extractor(episode_list):
         
         #run original script on each episode URL we found
         for url in page_urls:
-            print "[watchcartoononline-dl] downloading "+url+"..."
+            print "[watchcartoononline-dl]  downloading "+url+"..."
             doAnEpisode(url)
     else:
         print "ERROR: URL was invalid, please use a valid URL from www.watchcartoononline.com"
 
-def downloader(fileurl,file_name):
+def downloader(fileurl, file_name):
     #opens the video file url
     u = urllib2.urlopen(fileurl)
-    #writes new file with the filename provided
-    f = open(file_name, 'wb')
     #gets metadata
     meta = u.info()
     file_size = int(meta.getheaders("Content-Length")[0])
     file_type = meta.getheaders("Content-Type")[0]
+    
+    #before downloading, check if file already exists and is the expected size 
+    if os.path.isfile(file_name) and os.path.getsize(file_name) == file_size:
+        print "[watchcartoononline-dl]  file already exists and is the correct size, skipping..."
+        return
+
+    #writes new file with the filename provided
+    f = open(file_name, 'wb')
+
     print "[watchcartoononline-dl]  Filetype: %s" %(file_type)
     print "[watchcartoononline-dl]  Destination: %s" %(file_name)
     file_size_dl = 0
@@ -143,7 +151,8 @@ def doAnEpisode(url):
         print "ERROR: unable to extract video url from "+url
     else:
         name = final_url.replace('%20',' ').split('/')[-1]
-        downloader(final_url,name)
+        name = name[:name.find('?')] # remove trailing URL arguments
+        downloader(final_url, name)
 
 if __name__ == '__main__':
     if len(sys.argv[1:]) > 0:
