@@ -54,19 +54,23 @@ def episodes_extractor(episode_list):
         webpage = urllib2.urlopen(request).read()
 
         print "[watchcartoononline-dl]  Finding episode(s)"
-        #snip the html, to avoid matching episodes in the 'recenly added' bar
+        
+        #remove the end of the html, to avoid matching episodes in the 'recenly added' bar
         indexOfRecenly = webpage.find("Recenly")
         truncated = ""
         if indexOfRecenly != -1:
             truncated = webpage[:indexOfRecenly]
         else:
             print "WARNING: couldn't find 'Recenly Added' section in page, maybe the site layout has changed?"
-        
+            
+        #todo: improve this regex to work for more stuff
         page_urls = re.findall(r'https://www.watchcartoononline.io/[a-zA-Z0-9-]+episode-[0-9]{1,4}[a-zA-Z0-9-]+', truncated)
+        #print list of URLs we are about to download
         print "URLs found:"
         for url in page_urls:
             print url
         
+        #run original script on each episode URL we found
         for url in page_urls:
             print "[watchcartoononline-dl] downloading "+url+"..."
             doAnEpisode(url)
