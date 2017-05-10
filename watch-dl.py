@@ -82,7 +82,7 @@ def downloader(fileurl, file_name):
     try:
         #opens the video file url
         u = urllib2.urlopen(fileurl)
-    except HTTPError as he:
+    except urllib2.HTTPError as he:
         print "HTTPError! code:"+he.code()
         return
         
