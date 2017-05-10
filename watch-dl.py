@@ -25,7 +25,7 @@ def info_extractor(url):
         video_url = re.search('src="(.+?)"', video_url).group(1).replace(' ','%20')
         
         # "clicks" the "Click Here to Watch Free" button to so it can access the actual video file url
-        print "[watchcartoononline-dl]  Clicking stupid 'Watch Free' button"
+        #print "[watchcartoononline-dl]  Clicking stupid 'Watch Free' button"
         params = urllib.urlencode({'fuck_you':'','confirm':'Click Here to Watch Free!!'})
     
         print "[watchcartoononline-dl]  Getting video URL"
@@ -73,14 +73,19 @@ def episodes_extractor(episode_list):
         
         #run original script on each episode URL we found
         for url in page_urls:
-            print "[watchcartoononline-dl]  downloading "+url+"..."
+            print "[watchcartoononline-dl]  Downloading "+url
             doAnEpisode(url)
     else:
         print "ERROR: URL was invalid, please use a valid URL from www.watchcartoononline.com"
 
 def downloader(fileurl, file_name):
-    #opens the video file url
-    u = urllib2.urlopen(fileurl)
+    try:
+        #opens the video file url
+        u = urllib2.urlopen(fileurl)
+    except HTTPError as he:
+        print "HTTPError! code:"+he.code()
+        return
+        
     #gets metadata
     meta = u.info()
     file_size = int(meta.getheaders("Content-Length")[0])
