@@ -83,7 +83,7 @@ def downloader(fileurl, file_name):
         #opens the video file url
         u = urllib2.urlopen(fileurl)
     except urllib2.HTTPError as he:
-        print "HTTPError! code:"+he.code()
+        print "HTTPError! code:"+he.code
         return
         
     #gets metadata
