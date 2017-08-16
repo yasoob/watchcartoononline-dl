@@ -119,6 +119,8 @@ def downloader(fileurl, file_name):
 
     #Download done. Close file stream
     f.close()
+    sys.stdout.write(os.linesep)
+    sys.stdout.flush()
 
 def convertSize(n, format='%(value).1f %(symbol)s', symbols='customary'):
     """
