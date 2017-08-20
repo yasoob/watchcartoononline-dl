@@ -113,13 +113,14 @@ def downloader(fileurl, file_name):
         file_size_dl += len(buffer)
         f.write(buffer)
         status = r"[download]  %s of %s [%3.2f%%]" % (convertSize(file_size_dl), convertSize(file_size), file_size_dl * 100. / file_size)
-        status = status + chr(8)*(len(status)+1)
-        #print status
-        sys.stdout.write(" %s" % status)
+        sys.stdout.write((" " * (int(os.environ.get("COLUMNS") or 80)-2)) + "\r")
+        sys.stdout.write(status)
         sys.stdout.flush()
 
     #Download done. Close file stream
     f.close()
+    sys.stdout.write(os.linesep)
+    sys.stdout.flush()
 
 def convertSize(n, format='%(value).1f %(symbol)s', symbols='customary'):
     """
