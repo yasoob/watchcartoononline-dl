@@ -5,11 +5,12 @@
 from __future__ import print_function
 
 try:
-	from urllib2 import urlopen, Request, unquote
+	from urllib2 import urlopen, Request, unquote, HTTPError
 	from urllib import urlencode
 except ImportError:
 	from urllib.request import urlopen, Request
 	from urllib.parse import urlencode, unquote
+	from urllib.error import HTTPError
 
 import re
 import sys
@@ -90,7 +91,7 @@ def downloader(fileurl, file_name):
     try:
         #opens the video file url
         u = urlopen(fileurl)
-    except urllib2.HTTPError as he:
+    except HTTPError as he:
         print("HTTPError! code:"+str(he.code))
         return
         
