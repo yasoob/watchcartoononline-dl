@@ -2,16 +2,22 @@
 
 # -*- coding: utf-8 -*-
 # ported to python 3.x by Dragneel1234
-import urllib
-import urllib.request
-import urllib.parse
+from __future__ import print_function
+
+try:
+	from urllib2 import urlopen, Request, unquote
+	from urllib import urlencode
+except ImportError:
+	from urllib.request import urlopen, Request
+	from urllib.parse import urlencode, unquote
+
 import re
 import sys
 import os
 import os.path
 
 def info_extractor(url):
-    _VALID_URL = b'(?:https://)?(?:www\.)?watchcartoononline\.io/([^/]+)'
+    _VALID_URL = '(?:https://)?(?:www\.)?watchcartoononline\.io/([^/]+)'
     #checks if url is valid
     if re.match(_VALID_URL, url) is not None:
         #sets user_agent so watchcartoononline doesn't cause issues
@@ -19,8 +25,8 @@ def info_extractor(url):
         headers = { 'User-Agent' : user_agent }
         
         print("[watchcartoononline-dl] Downloading webpage")
-        request = urllib.request.Request(url.decode("utf-8"),headers=headers)
-        webpage = urllib.request.urlopen(request).read()
+        request = Request(url,headers=headers)
+        webpage = urlopen(request).read()
     
         print("[watchcartoononline-dl] Finding video")
         video_url = re.search(b'<iframe [^>]*src="https://www.watchcartoononline.io/inc/(.+?)>', webpage).group()
@@ -28,18 +34,18 @@ def info_extractor(url):
         
         # "clicks" the "Click Here to Watch Free" button to so it can access the actual video file url
         #print("[watchcartoononline-dl]  Clicking stupid 'Watch Free' button"
-        params = urllib.parse.urlencode({'fuck_you':'','confirm':'Click Here to Watch Free!!'})
+        params = urlencode({'fuck_you':'','confirm':'Click Here to Watch Free!!'})
     
         print("[watchcartoononline-dl]  Getting video URL")
-        request = urllib.request.Request(video_url.decode("utf-8"),params.encode(),headers=headers)
-        video_webpage = urllib.request.urlopen(request).read()
+        request = Request(video_url.decode("utf-8"),params.encode(),headers=headers)
+        video_webpage = urlopen(request).read()
         #scrapes the actual file url
         final_url =  re.findall(b'file: "(.+?)"', video_webpage)
         #throws error if list is blank
         if not final_url:
             print("ERROR: Video not found")
         else:
-            return urllib.parse.unquote(final_url[-1].decode("utf-8")).replace(' ','%20')
+            return unquote(final_url[-1].decode("utf-8")).replace(' ','%20')
     else:
         print("ERROR: URL was invalid, please use a valid URL from www.watchcartoononline.com")
 
@@ -53,8 +59,8 @@ def episodes_extractor(episode_list):
         headers = { 'User-Agent' : user_agent }
         
         print("[watchcartoononline-dl]  Downloading webpage")
-        request = urllib.request.Request(episode_list, headers=headers)
-        webpage = urllib.request.urlopen(request).read()
+        request = Request(episode_list, headers=headers)
+        webpage = urlopen(request).read()
 
         print("[watchcartoononline-dl]  Finding episode(s)")
         
@@ -83,7 +89,7 @@ def episodes_extractor(episode_list):
 def downloader(fileurl, file_name):
     try:
         #opens the video file url
-        u = urllib.request.urlopen(fileurl)
+        u = urlopen(fileurl)
     except urllib2.HTTPError as he:
         print("HTTPError! code:"+str(he.code))
         return
@@ -182,4 +188,3 @@ if __name__ == '__main__':
         #Prints some info if there was no argument
         print("Usage: python watch-dl.py [URL...]" )
         print("ERROR: You must provide a valid URL from www.watchcartoononline.com")
-
