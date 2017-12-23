@@ -16,6 +16,7 @@ import re
 import sys
 import os
 import os.path
+import argparse
 
 def info_extractor(url):
     _VALID_URL = b'(?:https://)?(?:www\.)?watchcartoononline\.io/([^/]+)'
@@ -46,11 +47,11 @@ def info_extractor(url):
         if not final_url:
             print("ERROR: Video not found")
         else:
-            return unquote(final_url[-1].decode("utf-8")).replace(' ','%20')
+            return final_url[-1]
     else:
         print("ERROR: URL was invalid, please use a valid URL from www.watchcartoononline.com")
 
-def episodes_extractor(episode_list):
+def episodes_extractor(episode_list, ep_range, directory):
     _VALID_URL = r'(?:https://)?(?:www\.)?watchcartoononline\.io/anime/([^/]+)'
     #check if url is valid
     if re.match(_VALID_URL, episode_list) is not None:
@@ -74,8 +75,27 @@ def episodes_extractor(episode_list):
             print("WARNING: couldn't find 'Recenly Added' section in page, maybe the site layout has changed?")
 
         #todo: improve this regex to work for more stuff
-        page_urls = re.findall(b'https://www.watchcartoononline.io/[a-zA-Z0-9-]+episode-[0-9]{1,4}[a-zA-Z0-9-]+', truncated)
+        page_urls = re.findall(b'https://www.watchcartoononline.io/[a-zA-Z0-9-]+episode-[0-9]{1,4}[a-zA-Z0-9-]+', truncated)[::-1]
         #print(list of URLs we are about to download
+
+        if len(ep_range) > 0:
+            start = ep_range[0]
+            end = ep_range[1]
+
+            if end < start:
+                print("ERROR: Please specify a valid episode range, end is before start")
+                sys.exit(0)
+            try:
+                start_idx = [i for i, s in enumerate(page_urls) if str(start) in s][0]
+                end_idx = [i for i, s in enumerate(page_urls) if str(end) in s][0]
+            except:
+                print("ERROR: Please specify a valid episode range, this range is out of range of the episodes")
+                sys.exit(0)
+
+            page_urls = page_urls[start_idx:end_idx+1]
+            print("[watchcartoononline-dl]  Downloading episodes {} thru {}".format(start, end))
+
+
         print("URLs found:")
         for url in page_urls:
             print(url.decode("utf-8"))
@@ -83,7 +103,7 @@ def episodes_extractor(episode_list):
         #run original script on each episode URL we found
         for url in page_urls:
             print("[watchcartoononline-dl]  Downloading "+ url.decode("utf-8"))
-            doAnEpisode(url)
+            doAnEpisode(url, directory)
     else:
         print("ERROR: URL was invalid, please use a valid URL from www.watchcartoononline.com")
 
@@ -105,8 +125,13 @@ def downloader(fileurl, file_name):
         print("[watchcartoononline-dl]  file already exists and is the correct size, skipping...")
         return
 
-    #writes new file with the filename provided
-    f = open(file_name, 'wb')
+    try:
+        #writes new file with the filename provided
+        f = open(file_name, 'wb')
+    except IOError as e:
+        print(e)
+        print("ERROR: That directory doesn't exist, please create the folder or specify a valid folder.")
+        sys.exit(0)
 
     print("[watchcartoononline-dl]  Filetype: %s" %(file_type))
     print("[watchcartoononline-dl]  Destination: %s" %(file_name))
@@ -159,7 +184,7 @@ def convertSize(n, format='%(value).1f %(symbol)s', symbols='iec'):
     return format % dict(symbol=symbols[0], value=n)
 
 
-def doAnEpisode(url):
+def doAnEpisode(url, directory):
     #url = sys.argv[1]
     final_url = info_extractor(url)
     if final_url is None:
@@ -167,25 +192,38 @@ def doAnEpisode(url):
     else:
         name = final_url.replace('%20',' ').split('/')[-1]
         name = name[:name.find('?')] # remove trailing URL arguments
-        downloader(final_url, name)
+        name = unquote(name)
+
+        if directory is None:
+            directory = os.getcwd()
+        downloader(final_url, os.path.join(directory, name))
 
 if __name__ == '__main__':
-    if len(sys.argv[1:]) > 0:
+    # Setup command line args, url, range, and directory
+    parser = argparse.ArgumentParser(prog='watch-dl.py', usage='%(prog)s [URL] [-h] [-r START_EPISODE_NUMBER END_EPISODE_NUMBER] [-d DIRECTORY]')
+    # parser = argparse.ArgumentParser()
+    parser.add_argument('url', nargs=1)
+    parser.add_argument('-r', '--range', nargs=2, type=int, help='Range of episodes to download.')
+    parser.add_argument('-d', '--directory', nargs=1, help='Directory to download episodes to, if not provided will downlaod to current working directory.')
+    parsed = parser.parse_args()
+    # NOTE: args with '-' have it replaced with '_'
+    print('Result:',  vars(parsed))
+
+    try:
+        url = parsed.url[0]
+        ep_range = parsed.range if parsed.range else []
+        dir = parsed.directory[0] if parsed.directory else ""
+        if "/anime/" in url: #argument looks like an episode-list page
+            print("[watchcartoononline-dl] looks like a list of episodes (season?), extracting episode page URLs...")
+            episodes_extractor(url, ep_range, dir)
+        else: #episode should be a video page
+            doAnEpisode(url, dir)
+    #throws error message for keyboard interrupt eg: ctrl+c
+    except KeyboardInterrupt:
+        print("\nERROR: Interrupted by user")
         try:
-            url = sys.argv[1]
-            if "/anime/" in url: #argument looks like an episode-list page
-                print("[watchcartoononline-dl] looks like a list of episodes (season?), extracting episode page URLs...")
-                episodes_extractor(sys.argv[1])
-            else: #episode should be a video page
-                doAnEpisode(url)
-        #throws error message for keyboard interrupt eg: ctrl+c
-        except KeyboardInterrupt:
-            print("\nERROR: Interrupted by user")
-            try:
-                sys.exit(0)
-            except SystemExit:
-                os._exit(0)
-    else:
-        #Prints some info if there was no argument
-        print("Usage: python watch-dl.py [URL...]" )
-        print("ERROR: You must provide a valid URL from www.watchcartoononline.com")
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)
+
+
